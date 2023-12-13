@@ -12,50 +12,54 @@ mongoose.connect('mongodb://127.0.0.1:27017/Todo-app', { useNewUrlParser: true, 
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
 
-
-
-
 const postSchema = new mongoose.Schema({
-    title: String,
-    content: String
-  });
-  
-  const Post = mongoose.model('Post', postSchema);
+  title: String,
+  content: String
+});
 
-  app.get('/posts', (req, res) => {
-    Post.find()
-      .then(posts => res.json(posts))
-      .catch(err => res.status(400).json('Error: ' + err));
-  });
+const Post = mongoose.model('Post', postSchema);
 
-  app.post('/add', (req, res) => {
-    const newPost = new Post({ title: req.body.title, content: req.body.content });
-  
-    newPost.save()
-      .then(() => res.json('Post added!'))
-      .catch(err => res.status(400).json('Error: ' + err));
-  });
+app.get('/posts', async (req, res) => {
+  try {
+    const posts = await Post.find();
+    res.json(posts);
+  } catch (err) {
+    res.status(400).json('Error: ' + err);
+  }
+});
 
-  app.put('/update/:id', (req, res) => {
-    Post.findById(req.params.id)
-      .then(post => {
-        post.title = req.body.title;
-        post.content = req.body.content;
-  
-        post.save()
-          .then(() => res.json('Post updated!'))
-          .catch(err => res.status(400).json('Error: ' + err));
-      })
-      .catch(err => res.status(400).json('Error: ' + err));
-  });
-  
-  app.delete('/delete/:id', (req, res) => {
-    Post.findByIdAndDelete(req.params.id)
-      .then(() => res.json('Post deleted.'))
-      .catch(err => res.status(400).json('Error: ' + err));
-  });
+app.post('/add', async (req, res) => {
+  const newPost = new Post({ title: req.body.title, content: req.body.content });
 
+  try {
+    await newPost.save();
+    res.json('Post added!');
+  } catch (err) {
+    res.status(400).json('Error: ' + err);
+  }
+});
 
+app.put('/update/:id', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    post.title = req.body.title;
+    post.content = req.body.content;
+
+    await post.save();
+    res.json('Post updated!');
+  } catch (err) {
+    res.status(400).json('Error: ' + err);
+  }
+});
+
+app.delete('/delete/:id', async (req, res) => {
+  try {
+    await Post.findByIdAndDelete(req.params.id);
+    res.json('Post deleted.');
+  } catch (err) {
+    res.status(400).json('Error: ' + err);
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
