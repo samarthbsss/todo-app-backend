@@ -1,80 +1,66 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const app = express();
-// const {connection} = require('./config/db');
 require('dotenv').config();
-
+const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
+const Post = require('./models/Post'); // Assuming this file exists with schema and model
 
-// app.use(bodyParser.json());
+const app = express();
+const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN })); // Specify allowed origins
 
-mongoose.connect('mongodb://127.0.0.1:27017/Todo-app', { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => console.log(err));
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch(err => console.error("MongoDB connection error:", err));
 
-const postSchema = new mongoose.Schema({
-  title: String,
-  content: String
-});
-
-const Post = mongoose.model('Post', postSchema);
-
+// Routes
 app.get('/posts', async (req, res) => {
   try {
     const posts = await Post.find();
-    res.json(posts);
+    res.status(200).json(posts);
   } catch (err) {
-    res.status(400).json('Error: ' + err);
+    res.status(500).json({ message: "Error fetching posts", error: err });
   }
 });
 
-app.post('/add', async (req, res) => {
-  const newPost = new Post({ title: req.body.title, content: req.body.content });
-
+app.post('/posts', async (req, res) => {
   try {
+    const newPost = new Post(req.body);
     await newPost.save();
-    res.json('Post added!');
+    res.status(201).json(newPost);
   } catch (err) {
-    res.status(400).json('Error: ' + err);
+    res.status(400).json({ message: "Error creating post", error: err });
   }
 });
 
-app.put('/update/:id', async (req, res) => {
+app.put('/posts/:id', async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
-    post.title = req.body.title;
-    post.content = req.body.content;
-
-    await post.save();
-    res.json('Post updated!');
+    const updatedPost = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedPost) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    res.status(200).json(updatedPost);
   } catch (err) {
-    res.status(400).json('Error: ' + err);
+    res.status(400).json({ message: "Error updating post", error: err });
   }
 });
 
-app.delete('/delete/:id', async (req, res) => {
+app.delete('/posts/:id', async (req, res) => {
   try {
-    await Post.findByIdAndDelete(req.params.id);
-    res.json('Post deleted.');
+    const deletedPost = await Post.findByIdAndDelete(req.params.id);
+    if (!deletedPost) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    res.status(204).send();
   } catch (err) {
-    res.status(400).json('Error: ' + err);
+    res.status(500).json({ message: "Error deleting post", error: err });
   }
 });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server running on port ${port}`));
-// app.listen(port, async () => {
-//   try {
-//     await connection;
-//     console.log('Connected to server');
+// Server Start
+app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
 
-//   } catch (error) {
-//     console.log(error);
-//   }
-//   console.log(`listening to server  ${port}`)
-
-// })
+module.exports = app;
