@@ -2,10 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
+// const {connection} = require('./config/db');
+require('dotenv').config();
 
 const mongoose = require('mongoose');
 
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
+
+app.use(express.json());
 app.use(cors());
 
 mongoose.connect('mongodb://127.0.0.1:27017/Todo-app', { useNewUrlParser: true, useUnifiedTopology: true })
@@ -61,5 +65,16 @@ app.delete('/delete/:id', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
+// app.listen(port, async () => {
+//   try {
+//     await connection;
+//     console.log('Connected to server');
+
+//   } catch (error) {
+//     console.log(error);
+//   }
+//   console.log(`listening to server  ${port}`)
+
+// })
