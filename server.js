@@ -9,7 +9,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(cors({ origin: process.env.CORS_ORIGIN })); // Specify allowed origins
+// app.use(cors({ origin: process.env.CORS_ORIGIN })); // Specify allowed origins
+
+app.use(cors());
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
