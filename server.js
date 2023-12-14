@@ -28,6 +28,10 @@ app.get('/posts', async (req, res) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.send("welcome");
+})
+
 app.post('/posts', async (req, res) => {
   try {
     const newPost = new Post(req.body);
